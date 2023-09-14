@@ -1,13 +1,25 @@
 [Unit]
-Description=Small description of the service
+Description=Keycloak
 After=network.target
 
 [Service]
 Type=simple
 User=__APP__
 Group=__APP__
+
+Environment="KC_HOSTNAME=__DOMAIN__"
+Environment="KC_PROXY=edge"
+Environment="KEYCLOAK_ADMIN=__ADMIN__"
+Environment="KEYCLOAK_ADMIN_PASSWORD=__PASSWORD__"
+Environment="KC_HTTP_PORT=__PORT__"
+Environment="KC_DB=postgres"
+Environment="KC_DB_URL_HOST=localhost"
+Environment="KC_DB_URL_DATABASE=__DB_NAME__"
+Environment="KC_DB_USERNAME=__DB_USER__"
+Environment="KC_DB_PASSWORD=__DB_PWD__"
+
 WorkingDirectory=__INSTALL_DIR__/
-ExecStart=__INSTALL_DIR__/script
+ExecStart=__INSTALL_DIR__/bin/kc.sh start
 StandardOutput=append:/var/log/__APP__/__APP__.log
 StandardError=inherit
 
