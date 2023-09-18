@@ -7,7 +7,7 @@ name = "Keycloak"
 description.en = "Open Source Identity and Access Management"
 description.fr = "Gestion des identités et des accès Open Source"
 
-version = "22.0.2~ynh1"
+version = "22.0.2~ynh2"
 
 maintainers = ["pbrisacier@mncc.fr"]
 

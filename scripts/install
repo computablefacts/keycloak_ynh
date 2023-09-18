@@ -161,24 +161,11 @@ ynh_script_progression --message="Adding a configuration file..." --weight=1
 ### ynh_store_file_checksum --file="$install_dir/some_config_file"
 
 #=================================================
-# SETUP APPLICATION WITH CURL
-#=================================================
-
-### Use these lines only if the app installation needs to be finalized through
-### web forms. We generally don't want to ask the final user,
-### so we're going to use curl to automatically fill the fields and submit the
-### forms.
-
-# Installation with curl
-#ynh_script_progression --message="Finalizing installation..." --weight=1
-#ynh_local_curl "/INSTALL_PATH" "key1=value1" "key2=value2" "key3=value3"
-
-#=================================================
 # GENERIC FINALIZATION
 #=================================================
 # START SYSTEMD SERVICE
 #=================================================
-ynh_script_progression --message="Starting a systemd service..." --weight=1
+ynh_script_progression --message="Starting a systemd service..." --weight=4
 
 ### `ynh_systemd_action` is used to start a systemd service for an app.
 ### Only needed if you have configure a systemd service
@@ -190,6 +177,43 @@ ynh_script_progression --message="Starting a systemd service..." --weight=1
 
 # Start a systemd service
 ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+
+# Wait 40 secondes to let Keycloak starting for the first time...
+sleep 40
+
+#DEBUG
+# systemctl_answer=$(systemctl status keycloak.service)
+# ynh_print_info "systemctl_answer=$systemctl_answer"
+# sleep 2
+# cat /etc/systemd/system/keycloak.service
+# sleep 2
+# cat /etc/nginx/conf.d/auth.apps.ynh01.computablefacts.com.d/keycloak.conf
+# sleep 2
+#END DEBUG
+
+#=================================================
+# SETUP APPLICATION WITH CURL
+#=================================================
+
+### Use these lines only if the app installation needs to be finalized through
+### web forms. We generally don't want to ask the final user,
+### so we're going to use curl to automatically fill the fields and submit the
+### forms.
+
+# Installation with curl
+ynh_script_progression --message="Configure default realm with YunoHost LDAP..." --weight=1
+
+# Connect admin account to get a token
+auth_answer=$(ynh_local_curl_extended "/realms/master/protocol/openid-connect/token" "client_id=admin-cli" "username=$admin" "password=$password" "grant_type=password")
+extracted_bearer=$(echo "${auth_answer}" | jq -r '.access_token')
+
+default_realm_json=$(< ../conf/default-realm.json)
+default_realm_json_no_space="${default_realm_json//[$'\n\t\r ']}"
+
+settings_answer=$(ynh_local_curl_extended "/admin/realms" "curl_bearer=$extracted_bearer" "curl_content_type=application/json" "$default_realm_json_no_space")
+
+#ynh_script_progression --message="Finalizing installation..." --weight=1
+#ynh_local_curl "/INSTALL_PATH" "key1=value1" "key2=value2" "key3=value3"
 
 #=================================================
 # END OF SCRIPT
